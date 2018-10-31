@@ -7,7 +7,9 @@ import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
 import {withStyles} from '@material-ui/core/styles';
 
-// TODO: import EmbarkJS, web3 and our DReddit contract
+import EmbarkJS from 'Embark/EmbarkJS';
+import web3 from 'Embark/web3';
+import DReddit from 'Embark/contracts/DReddit';
 
 const styles = theme => ({
   textField: {
@@ -47,11 +49,13 @@ class Create extends Component{
       'content': this.state.content
     };
 
-    // TODO: Save the previous object in IPFS
+    const ipfsHash = await EmbarkJS.Storage.saveText(JSON.stringify(textToSave));
 
-    // TODO: Estimate gas required to invoke the `create` function from the contract
+    const {create} = DReddit.methods;    
+    const toSend = await create(web3.utils.toHex(ipfsHash));
+    const estimatedGas = await toSend.estimateGas();
 
-    // TODO: Send the transaction
+    const receipt = await toSend.send({from: web3.eth.defaultAccount, gas: estimatedGas + 1000});
 
     this.setState({
       isSubmitting: false,
