@@ -43,7 +43,16 @@ contract DReddit {
     function create(bytes _description)
         public
     {
-        // TODO: 
+        uint postId = posts.length++;
+        posts[postId] = Post({
+          creationDate: now,
+          description: _description,
+          owner: msg.sender,
+          upvotes: 0,
+          downvotes: 0
+        });
+
+        emit NewPost(postId, msg.sender, _description);
     }
 
     // @notice Vote on a post
@@ -52,7 +61,20 @@ contract DReddit {
     function vote(uint _postId, uint8 _vote)
         public
     {
-        // TODO:
+        Post storage p = posts[_postId];
+        require(p.creationDate != 0, 'Post does not exist.');
+        require(p.voters[msg.sender] == Ballot.NONE, 'You already voted on this post.');
+
+        Ballot b = Ballot(_vote);
+
+        if (b == Ballot.UPVOTE) {
+          p.upvotes++;
+        } else {
+          p.downvotes++;
+        }
+        p.voters[msg.sender] = b;
+
+        emit Vote(_postId, msg.sender, _vote);
     }
 
     // @notice Determine if the sender can vote on a post
@@ -63,7 +85,10 @@ contract DReddit {
         view
         returns (bool)
     {
-        // TODO:
+        if (_postId > posts.length - 1) return false;
+
+        Post storage p = posts[_postId];
+        return (p.voters[msg.sender] == Ballot.NONE);
     }
 
     // @notice Obtain vote for specific post
@@ -74,7 +99,8 @@ contract DReddit {
         view
         returns (uint8)
     {
-        // TODO:
+        Post storage p = posts[_postId];
+        return uint8(p.voters[msg.sender]);
     }
 
 }
